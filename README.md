@@ -1,6 +1,17 @@
-# SoCK Validator Library
+# SoCK Library
 
-SoCK Validator is a library developed with Python programming. This library contains functions that can be used in the process of validating the completeness of the knowledge graph data. The functions available in this library are data collection, shape formation, data validation, and data visualization. Users are expected to be familiar with using Python to use this library properly.
+<p align="center">
+    <img src="./readme-images/logo.jpg" alt="drawing" width="75%"/>
+<p>
+
+SoCK Library is a library developed with Python programming. This library contains functions that can be used in the process of validating the completeness of the knowledge graph data. The functions available in this library are data collection, shape formation, data validation, and data visualization. Users are expected to be familiar with using Python to use this library properly.
+
+The SoCK library reuses some of the existing Python libraries, such as:
+- [RDFLib](https://rdflib.readthedocs.io/)
+- [SPARQLWrapper](https://sparqlwrapper.readthedocs.io/)
+- [PySHACL](https://pypi.org/project/pyshacl/)
+- [Pandas](https://pandas.pydata.org/)
+- [Plotly](https://plotly.com/python/)
 
 # Motivation
 
