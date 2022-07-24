@@ -1,14 +1,9 @@
-# Table of Content
-
 # Table of Contents
 1. [Overview](#overview)
 2. [Motivation](#motivation)
 3. [Functions](#functions)
 4. [How to Setup](#how-to-setup)
 5. [Code Example](#code-example)
-
-<br />
-<br />
 
 # Overview
 
@@ -18,16 +13,16 @@
 
 SoCK Library is a library developed with Python programming. This library contains functions that can be used in the process of validating the completeness of the knowledge graph data. The functions available in this library are data collection, shape formation, data validation, and data visualization. Users are expected to be familiar with using Python to use this library properly.
 
->The SoCK library reuses some of the existing Python libraries as **requirements**, such as:
->- [RDFLib](https://rdflib.readthedocs.io/)
->- [SPARQLWrapper](https://sparqlwrapper.readthedocs.io/)
->- [PySHACL](https://pypi.org/project/pyshacl/)
->- [Pandas](https://pandas.pydata.org/)
->- [Plotly](https://plotly.com/python/)
+The SoCK library reuses some of the existing Python libraries as **requirements**, such as:
+- [RDFLib](https://rdflib.readthedocs.io/)
+- [SPARQLWrapper](https://sparqlwrapper.readthedocs.io/)
+- [PySHACL](https://pypi.org/project/pyshacl/)
+- [Pandas](https://pandas.pydata.org/)
+- [Plotly](https://plotly.com/python/)
 
 # Motivation
 
-SoCK Validator is part of the SoCK Framework project. This project exists because of the rapid development of knowledge graphs. However, it is not supported by a good data quality, especially in terms of completeness. Therefore, the SoCK framework was developed as a pattern-oriented framework to support the creation and validation of knowledge about completeness in KGs. All the developed patterns and their instantiations can be accessed [here](https://sock.cs.ui.ac.id). Happy exploring!
+SoCK Validator is part of the SoCK Framework project. This project exists because of the rapid development of knowledge graphs. However, it is not supported by a good data quality, especially in terms of completeness. Therefore, the SoCK framework was developed as a pattern-oriented framework to support the creation and validation of knowledge about completeness in KGs. All the developed patterns and their instantiations can be accessed <a href="https://sock.cs.ui.ac.id" target="_blank"><b>here</b></a>. Happy exploring!
 
 # Functions
 
@@ -43,7 +38,7 @@ SoCK library provides several functions to perform completeness pattern instatia
 - ```create_report_validation```, converts validation report from a graph to a form of table.
 - ```create_completeness_info_viz```, generates a visualization from table of validation report.
 
-All the functions above are generally used consecutively. We prepare a demo to use this library with all thos functions on [this section](#code-example).
+All the functions above are generally used consecutively. We prepare a demo to use this library with all those functions on [this section](#code-example).
 
 # How to Setup
 
