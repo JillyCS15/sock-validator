@@ -1,0 +1,5 @@
+pandas
+pyshacl
+rdflib
+sparqlwrapper
+tqdm
