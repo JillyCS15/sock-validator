@@ -1,8 +1,9 @@
-import time
-import sys
+import argparse
 import pandas as pd
 
+from tqdm import tqdm
 from SPARQLWrapper import SPARQLWrapper, JSON
+
 
 def query_sparql(query, sparql_endpoint):
   """
@@ -38,6 +39,7 @@ def query_sparql(query, sparql_endpoint):
   # return the result in dataframe
   return results_df
 
+
 def get_data_prop(df, prop_list, sparql_endpoint):
     """
     Query the property value given all the instances to be validated.
@@ -64,42 +66,25 @@ def get_data_prop(df, prop_list, sparql_endpoint):
     list_data = []
 
     for prop in prop_list:
-        # initiate index
-        idx_lower = 0
-        idx_upper = 50
-
-        # window-looping through length of data
-        while idx_lower <= size:
-            if idx_upper > size:
-                idx_upper = size
-            
-            # check the index
-            print(idx_lower, idx_upper)
-
-            while True:
-                try:
-                    query = f"""
+        for idx in tqdm(range(0, size, 50), desc=f"Collecting values of {prop}"):
+            try:
+                query = f"""
 SELECT ?s ?p ?o
 WHERE {{
-    VALUES ?s {{{' '.join(data['entity'][idx_lower:idx_upper]) }}}
+    VALUES ?s {{{' '.join(data['entity'][idx-50:idx]) }}}
     BIND({prop} AS ?p)
     ?s ?p ?o .
 }}
 """
-                    res = query_sparql(query, sparql_endpoint)
-                    list_data.append(res)
-
-                except:
-                    time.sleep(5)
-                    continue
-
-                # update idx
-                idx_lower += 50
-                idx_upper += 50
-
+                res = query_sparql(query, sparql_endpoint)
+                list_data.append(res)
+                
+            except:
+                print("Something wrong in collecting the data properties")
                 break
-
+    
     return pd.concat(list_data, ignore_index=True, sort=False)
+
 
 def retrieve_data(filename, sparql_endpoint):
     with open(filename, 'r') as file:
@@ -112,18 +97,31 @@ def retrieve_data(filename, sparql_endpoint):
     print("Succesfully retrieve data")
     return data
 
+
 def retrieve_data_prop(data, prop_list, sparql_endpoint):
     print("Retrieving properties of data ...")
     data_prop = get_data_prop(data, prop_list, sparql_endpoint)
     data_prop.to_csv('data_prop.csv')
     print("Succesfully retrieve data properties")
 
+
 if __name__ == "__main__": 
-    filename = sys.argv[1]
-    sparql_endpoint = sys.argv[2]
-    prop_list = sys.argv[3].split(',')
+    parser = argparse.ArgumentParser(allow_abbrev=False,
+                                        description="Arguments for preparing data to be validated")
+    required = parser.add_argument_group('required arguments')
+
+    required.add_argument("--query_file", type=str, required=True,
+                            help="A file path for a SPARQL query file in txt format")
+    required.add_argument("--sparql_endpoint", type=str, required=True,
+                            help="A string of SPARQL endpoint URL")
+    required.add_argument("--prop_list", type=str, required=True, nargs="+",
+                            help="A list of property to be check for each entity")
+
+    args = parser.parse_args()
+    filename = args.query_file
+    sparql_endpoint = args.sparql_endpoint
+    prop_list = args.prop_list
+    # prop_list = prop_list.split(",")
 
     data = retrieve_data(filename, sparql_endpoint)
     data_prop = retrieve_data_prop(data, prop_list, sparql_endpoint)
-
-
