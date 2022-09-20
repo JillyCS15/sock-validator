@@ -1,8 +1,8 @@
-import sys
+import argparse
 import pandas as pd
 
 from pyshacl import validate
-from rdflib import Graph, URIRef, BNode, Literal 
+from rdflib import Graph, URIRef, BNode, Literal, Namespace
 
 def validate_graph(shapes_graph, data_graph, is_advanced=False):
     """
@@ -74,6 +74,12 @@ def construct_data_graph(data, data_prop, entity_class):
     # convert data into data graph
     data_graph = Graph()
 
+    # add default namespaces
+    dbo_prefix = Namespace("http://dbpedia.org/ontology/")
+    wd_prefix = Namespace("http://www.wikidata.org/entity/")
+    data_graph.bind("dbo", dbo_prefix)
+    data_graph.bind("wd", wd_prefix)
+
     # add instance relation for all entities
     # only used for checking with target for a certain class
     # if not, just skip it
@@ -108,20 +114,27 @@ def construct_shapes_graph(shapes_file):
     return shapes_graph
 
 if __name__ == "__main__": 
-    data_file = input("Enter a filename of data: ")
-    data = pd.read_csv(data_file)
-    data_prop_file = input("Enter a filename of data properties: ")
-    data_prop = pd.read_csv(data_prop_file)
-    cls = input("Enter a class name: ")
-    prop_list = input("Enter a list of properies: ")
-    prop_list = prop_list.split(",")
-    shapes_file = input("Enter a filename of shapes: ")
+    parser = argparse.ArgumentParser(allow_abbrev=False,
+                                        description="Arguments for completeness validation process")
+    required = parser.add_argument_group('required arguments')
 
-    # data = pd.read_csv(sys.argv[1])
-    # data_prop = pd.read_csv(sys.argv[2])
-    # cls = sys.argv[3]
-    # prop_list = sys.argv[4].split(',')
-    # shapes_file = sys.argv[5]
+    required.add_argument("--data_file", type=str, required=True,
+                            help="A file path of data file in csv format")
+    required.add_argument("--data_prop_file", type=str, required=True,
+                            help="A file path of data along with the properties in csv format")
+    required.add_argument("--class_uri", type=str, required=True,
+                            help="An URI of target class")
+    required.add_argument("--shapes_file", type=str, required=True,
+                            help="A file path of shapes graph in ttl format")
+    required.add_argument("--prop_list", type=str, required=True, nargs="+",
+                            help="A list of property to be check for each entity")
+
+    args = parser.parse_args()
+    data = pd.read_csv(args.data_file)
+    data_prop = pd.read_csv(args.data_prop_file)
+    class_uri = args.class_uri
+    shapes_file = args.shapes_file
+    prop_list = args.prop_list
 
     # handle NaN values in language attribute
     if 'o.xml:lang' in data_prop.columns.tolist():
@@ -129,7 +142,7 @@ if __name__ == "__main__":
 
     # create data graph and shapes graph
     print("Constructing data graph ...")
-    data_graph = construct_data_graph(data, data_prop, cls)
+    data_graph = construct_data_graph(data, data_prop, class_uri)
     print("Constructing shapes graph ...")
     shapes_graph = construct_shapes_graph(shapes_file)
 
