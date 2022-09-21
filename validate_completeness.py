@@ -2,7 +2,8 @@ import argparse
 import pandas as pd
 
 from pyshacl import validate
-from rdflib import Graph, URIRef, BNode, Literal, Namespace
+from rdflib import Graph
+
 
 def validate_graph(shapes_graph, data_graph, is_advanced=False):
     """
@@ -31,6 +32,7 @@ def validate_graph(shapes_graph, data_graph, is_advanced=False):
         )
     
     return result
+
 
 def create_report_validation(df, use_col, report_graph, prop_list):
     report = Graph()
@@ -70,48 +72,13 @@ WHERE {{
     validation['complete_all'] = validation.iloc[:,1:].sum(axis=1)/len(prop_list)
     return validation
 
-def construct_data_graph(data, data_prop, entity_class):
-    # convert data into data graph
-    data_graph = Graph()
+def construct_graph(graph_file):
+    # load graph
+    graph = Graph()
+    graph.parse(graph_file)
 
-    # add default namespaces
-    dbo_prefix = Namespace("http://dbpedia.org/ontology/")
-    wd_prefix = Namespace("http://www.wikidata.org/entity/")
-    data_graph.bind("dbo", dbo_prefix)
-    data_graph.bind("wd", wd_prefix)
+    return graph
 
-    # add instance relation for all entities
-    # only used for checking with target for a certain class
-    # if not, just skip it
-    for _, row in data.iterrows():
-        s = URIRef(row['entity.value'])
-        p = URIRef('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
-        o = URIRef(entity_class)
-        data_graph.add((s, p, o))
-
-    # add node-property relation for all entities
-    for _, row in data_prop.iterrows():
-        s = URIRef(row['s.value'])
-        p = URIRef(row['p.value'])
-        if row['o.type'] == 'literal':
-            if row['o.xml:lang'] == 'not specified':
-                o = o = Literal(row['o.value'])
-            else:
-                o = Literal(row['o.value'], lang=row['o.xml:lang'])
-        elif row['o.type'] == 'typed-literal':
-            o = Literal(row['o.value'], datatype=row['o.datatype'])
-        else:
-            o = URIRef(row['o.value'])
-        data_graph.add((s, p, o))
-
-    return data_graph
-
-def construct_shapes_graph(shapes_file):
-    # load shapes graph
-    shapes_graph = Graph()
-    shapes_graph.parse(shapes_file)
-
-    return shapes_graph
 
 if __name__ == "__main__": 
     parser = argparse.ArgumentParser(allow_abbrev=False,
@@ -122,9 +89,9 @@ if __name__ == "__main__":
                             help="A file path of data file in csv format")
     required.add_argument("--data_prop_file", type=str, required=True,
                             help="A file path of data along with the properties in csv format")
-    required.add_argument("--class_uri", type=str, required=True,
-                            help="An URI of target class")
-    required.add_argument("--shapes_file", type=str, required=True,
+    required.add_argument("--data_graph", type=str, required=True,
+                            help="A file path of data graph in ttl format")
+    required.add_argument("--shapes_graph", type=str, required=True,
                             help="A file path of shapes graph in ttl format")
     required.add_argument("--prop_list", type=str, required=True, nargs="+",
                             help="A list of property to be check for each entity")
@@ -132,8 +99,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     data = pd.read_csv(args.data_file)
     data_prop = pd.read_csv(args.data_prop_file)
-    class_uri = args.class_uri
-    shapes_file = args.shapes_file
+    data_graph_file = args.data_graph
+    shapes_graph_file = args.shapes_graph
     prop_list = args.prop_list
 
     # handle NaN values in language attribute
@@ -142,9 +109,9 @@ if __name__ == "__main__":
 
     # create data graph and shapes graph
     print("Constructing data graph ...")
-    data_graph = construct_data_graph(data, data_prop, class_uri)
+    data_graph = construct_graph(data_graph_file)
     print("Constructing shapes graph ...")
-    shapes_graph = construct_shapes_graph(shapes_file)
+    shapes_graph = construct_graph(shapes_graph_file)
 
     # validate the data graph
     print("Validating the completeness ...")
