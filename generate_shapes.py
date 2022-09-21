@@ -1,10 +1,11 @@
-import os
 import sys
+import argparse
 
 import pandas as pd
 
 from tqdm import tqdm
 from SPARQLWrapper import SPARQLWrapper, JSON
+
 
 prefixes = """
 @prefix : <http://example.org/ns#> .
@@ -169,6 +170,7 @@ def query_sparql(query, sparql_endpoint):
     # return the result in dataframe
     return results_df
 
+
 def get_property_by_ontology(class_uri, sparql_endpoint):
     """
     Get all the desired properties of a class by an ontological approach.
@@ -187,7 +189,7 @@ def get_property_by_ontology(class_uri, sparql_endpoint):
     query = f"""
 SELECT DISTINCT ?prop
 WHERE {{
-?prop rdfs:domain {class_uri} .
+    ?prop rdfs:domain {class_uri} .
 }}
     """
 
@@ -195,9 +197,8 @@ WHERE {{
     prop_df = query_sparql(query, sparql_endpoint)
     prop_df['cardinality'] = 1
 
-    # print(construct_shapes_graph(shape_name, df, "prop.value", "cardinality", "dbo:Hotel"))
-
     return prop_df
+
 
 def get_property_by_statistics(class_uri, sparql_endpoint):
     """
@@ -215,6 +216,7 @@ def get_property_by_statistics(class_uri, sparql_endpoint):
     """
 
     # get candidate properties
+    print("Get all the candidate properties...")
     query = f"""
 SELECT DISTINCT ?prop
 WHERE {{
@@ -237,6 +239,7 @@ WHERE {{
 
 
     # query the frequency of all the properties
+    print("Calculate the relative frequency of each property...")
     list_rel_freq = []
 
     for idx in tqdm(range(candidate_prop.shape[0]), desc="Calculate the relative frequency of all properties: "):
@@ -265,17 +268,13 @@ WHERE {{
 
 
 def generate_by_spreadsheet(data, shape_name_col, shape_target_col, prop, card_col):
-    current_directory = os.getcwd()
-    final_directory = os.path.join(current_directory, r'list_shapes')
-    if not os.path.exists(final_directory):
-        os.makedirs(final_directory)
-    
+    shapes_graph = ""
     for idx in tqdm(range(data.shape[0]), desc="Creating shapes graph: "):
         shape_name = data.at[idx, shape_name_col]
         shape_target = data.at[idx, shape_target_col]
         cardinality = data.at[idx, card_col]
 
-        shapes_graph = \
+        shapes_graph += \
 f"""
 ex:{shape_name}Shape a sh:NodeShape ;
     sh:targetNode {shape_target} ;
@@ -286,32 +285,64 @@ ex:{shape_name}PropertyShape a sh:PropertyShape ;
     sh:minCount {cardinality} .
 """
 
-        with open(f"./list_shapes/{shape_name}-shacl-1.ttl", "w") as file:
-            file.write(prefixes[1:] + shapes_graph)
-
-    print("Successfully created all the shapes graphs by the given data")
-
-def generated_by_automatic():
-    pass
+    return prefixes[1:] + shapes_graph
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers(help='commands')
+
+    # A spreadsheet command
+    spreadsheet_parser = subparsers.add_parser('spreadsheet', help='Spreadsheet arguments')
+    spreadsheet_parser = spreadsheet_parser.add_argument_group('required arguments')
+    spreadsheet_parser.add_argument("--file", type=str, required=True,
+                            help="A file path for a shapes data file in csv format")
+    spreadsheet_parser.add_argument("--shape_name_col", type=str, required=True,
+                            help="A column for the name of the shapes, i.e. the title of each entity and contains no whitespaces")
+    spreadsheet_parser.add_argument("--shape_target_col", type=str, required=True,
+                            help="A column for the shapes' target, i.e. URI of each entity and contains no whitespaces")
+    spreadsheet_parser.add_argument("--prop_uri", type=str, required=True,
+                            help="An URI coressponding to the path to be checked")
+    spreadsheet_parser.add_argument("--card_col", type=str, required=True,
+                            help="A column name that contains information regarding the minimum number of paths if considered complete and contains no whitespaces")
+
+    # A ontology command
+    ontology_parser = subparsers.add_parser('ontology', help='Spreadsheet arguments')
+    ontology_parser = ontology_parser.add_argument_group('required arguments')
+    ontology_parser.add_argument("--class_uri", type=str, required=True,
+                            help="An URI of a target class for shapes graph")
+    ontology_parser.add_argument("--sparql_endpoint", type=str, required=True,
+                            help="A string of SPARQL endpoint URL")
+
+    # A statistics command
+    statistics_parser = subparsers.add_parser('statistics', help='Spreadsheet arguments')
+    statistics_parser = statistics_parser.add_argument_group('required arguments')
+    statistics_parser.add_argument("--class_uri", type=str, required=True,
+                            help="An URI of a target class for shapes graph")
+    statistics_parser.add_argument("--sparql_endpoint", type=str, required=True,
+                            help="A string of SPARQL endpoint URL")
+
+    args = parser.parse_args()
+
     if sys.argv[1] == "spreadsheet":
-        filename = input("Enter a data filename: ")
-        shape_name = input("Enter a column name for a shape: ")
-        shape_target = input("Enter a column name for a shape target: ")
-        prop = input("Enter a property URI: ")
-        card_col = input("Enter a column name for property shape cardinality: ")
-
+        filename = args.file
+        shape_name = args.shape_name
+        shape_target = args.shape_target
+        prop = args.prop_uri
+        card_col = args.card_col
+        
         df = pd.read_csv(filename)
-        generate_by_spreadsheet(df, shape_name, shape_target, prop, card_col)
+        shapes_graph = generate_by_spreadsheet(df, shape_name, shape_target, prop, card_col)
 
-        pass
+        with open("shacl-shapes.ttl", "w") as file:
+            file.write(shapes_graph)
+
+        print("Successfully created a shapes graph")
 
     elif sys.argv[1] == 'ontology':
-        class_uri = input("Enter a class URI: ")
-        shape_name = input("Enter a class name: ")
-        sparql_endpoint = input("Enter a SPARQL endpoint: ")
+        class_uri = args.class_uri
+        shape_name = "".join(class_uri.split(":")[1:])
+        sparql_endpoint = args.sparql_endpoint
 
         # get all the required properties
         print("Get all the required properties...")
@@ -325,15 +356,15 @@ if __name__ == "__main__":
                                                 'prop.value', 
                                                 'cardinality', 
                                                 class_uri)
-        with open("shacl-1.ttl", "w") as file:
+        with open("shacl-shapes.ttl", "w") as file:
             file.write(shapes_graph)
 
         print("Successfully created a shapes graph")
 
     elif sys.argv[1] == 'statistics':
-        class_uri = input("Enter a class URI: ")
-        shape_name = input("Enter a class name: ")
-        sparql_endpoint = input("Enter a SPARQL endpoint: ")
+        class_uri = args.class_uri
+        shape_name = "".join(class_uri.split(":")[1:])
+        sparql_endpoint = args.sparql_endpoint
 
         # get all the required properties
         print("Get all the required properties...")
@@ -347,10 +378,8 @@ if __name__ == "__main__":
                                                 'prop.value', 
                                                 'cardinality', 
                                                 class_uri)
-        with open("shacl-1.ttl", "w") as file:
+        with open("shacl-shapes.ttl", "w") as file:
             file.write(shapes_graph)
 
-    elif sys.argv[1] == 'automatic':
-        pass
     else:
         print("A type of argument not acceptible. Try again!")
