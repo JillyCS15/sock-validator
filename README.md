@@ -76,13 +76,13 @@ Given a user wants to check each instance of class ```dbo:Country``` in DBpedia 
 
 **Using Python File**
 
-1. First thing first, we have to collect all the data and their corresponding property values. Assume you have created a file containing a query in SPARQL syntax named ```query.txt```. Then, we execute ```prepare_data.py``` along with the required arguments, such as file containing the SPARQL query for data collection, SPARQL endpoint where the SPARQL query executed, URI of entity's class, and a list of required properties. The code we execute should be like this below. After the execution, we get the data in a type of graph called **data graph** stored in the ttl file named ```data_graph.ttl```.
+1. First thing first, we have to collect all the data and their corresponding property values. Assume you have created a file containing a query in SPARQL syntax named ```query.txt```. Then, we execute ```prepare_data.py``` along with the required arguments, such as file containing the SPARQL query for data collection, SPARQL endpoint where the SPARQL query executed, URI of entity's class, and a list of required properties. The code we execute should be like this below. After the execution, we get the data in a type of graph called **data graph** stored in the TTL file named ```data_graph.ttl```.
 
     ```
     > python prepare_data.py --query_file query.txt --sparql_endpoint http://dbpedia.org/sparql --class_uri http://dbpedia.org/ontology/Country --prop_list rdfs:label rdfs:comment
     ```
 
-2. Next, we should create a shapes graph containing all the constraints for the data graph. We can check on the SoCK webapp [here](https://sock.cs.ui.ac.id/pattern/) which provide all the type of completeness patterns. Based on the use case, we choose a label and description completeness pattern. Here is the instantiation of its pattern using a manual approach. This instantiation then called as a shapes graph. The shapes graph then stored in the ttl file named ```shapes_graph.ttl```.
+2. Next, we should create a shapes graph containing all the constraints for the data graph. We can check on the SoCK webapp [here](https://sock.cs.ui.ac.id/pattern/) which provide all the type of completeness patterns. Based on the use case, we choose a label and description completeness pattern. Here is the instantiation of its pattern using a manual approach. This instantiation then called as a shapes graph. The shapes graph then stored in the TTL file named ```shapes_graph.ttl```.
 
     ```
     # prefixes
