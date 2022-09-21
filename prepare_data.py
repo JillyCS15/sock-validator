@@ -2,6 +2,7 @@ import argparse
 import pandas as pd
 
 from tqdm import tqdm
+from rdflib import Graph, URIRef, Literal, Namespace
 from SPARQLWrapper import SPARQLWrapper, JSON
 
 
@@ -71,7 +72,7 @@ def get_data_prop(df, prop_list, sparql_endpoint):
                 query = f"""
 SELECT ?s ?p ?o
 WHERE {{
-    VALUES ?s {{{' '.join(data['entity'][idx-50:idx]) }}}
+    VALUES ?s {{{' '.join(data['entity'][idx:idx+50]) }}}
     BIND({prop} AS ?p)
     ?s ?p ?o .
 }}
@@ -103,6 +104,43 @@ def retrieve_data_prop(data, prop_list, sparql_endpoint):
     data_prop = get_data_prop(data, prop_list, sparql_endpoint)
     data_prop.to_csv('data_prop.csv')
     print("Succesfully retrieve data properties")
+    return data_prop
+
+def construct_data_graph(data, data_prop, entity_class):
+    # convert data into data graph
+    data_graph = Graph()
+
+    # add default namespaces
+    dbo_prefix = Namespace("http://dbpedia.org/ontology/")
+    wd_prefix = Namespace("http://www.wikidata.org/entity/")
+    data_graph.bind("dbo", dbo_prefix)
+    data_graph.bind("wd", wd_prefix)
+
+    # add instance relation for all entities
+    # only used for checking with target for a certain class
+    # if not, just skip it
+    for _, row in data.iterrows():
+        s = URIRef(row['entity.value'])
+        p = URIRef('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
+        o = URIRef(entity_class)
+        data_graph.add((s, p, o))
+
+    # add node-property relation for all entities
+    for _, row in data_prop.iterrows():
+        s = URIRef(row['s.value'])
+        p = URIRef(row['p.value'])
+        if row['o.type'] == 'literal':
+            if row['o.xml:lang'] == 'not specified':
+                o = o = Literal(row['o.value'])
+            else:
+                o = Literal(row['o.value'], lang=row['o.xml:lang'])
+        elif row['o.type'] == 'typed-literal':
+            o = Literal(row['o.value'], datatype=row['o.datatype'])
+        else:
+            o = URIRef(row['o.value'])
+        data_graph.add((s, p, o))
+
+    data_graph.serialize(destination="data_graph.ttl", format='turtle')
 
 
 if __name__ == "__main__": 
@@ -114,14 +152,19 @@ if __name__ == "__main__":
                             help="A file path for a SPARQL query file in txt format")
     required.add_argument("--sparql_endpoint", type=str, required=True,
                             help="A string of SPARQL endpoint URL")
+    required.add_argument("--class_uri", type=str, required=True,
+                            help="An URI of target class")
     required.add_argument("--prop_list", type=str, required=True, nargs="+",
-                            help="A list of property to be check for each entity")
+                            help="A list of properties to be checked for each entity")
 
     args = parser.parse_args()
     filename = args.query_file
     sparql_endpoint = args.sparql_endpoint
+    class_uri = args.class_uri
     prop_list = args.prop_list
-    # prop_list = prop_list.split(",")
 
     data = retrieve_data(filename, sparql_endpoint)
     data_prop = retrieve_data_prop(data, prop_list, sparql_endpoint)
+
+    # create data graph
+    construct_data_graph(data, data_prop, class_uri)
