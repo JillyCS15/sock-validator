@@ -39,7 +39,7 @@ There are several functions to perform completeness pattern instatiation and com
 - ```create_report_validation```, converts validation report from a graph to a form of table.
 - ```create_completeness_info_viz```, generates a visualization from table of validation report.
 
-All the functions above are generally used consecutively. We prepare a demo to use this library with all those functions on [this section](#code-example).
+All the functions above are generally used consecutively. We prepare a demo to use this library with all those functions on [this section](#demonstration).
 
 # How to Setup
 
@@ -102,13 +102,13 @@ Given a user wants to check each instance of class ```dbo:Country``` in DBpedia 
     conforms, report_graph, report_text = validate_graph(shapes_graph, data_graph, use_advance_feat)
     ```
 
-6. Then, we create a validation report in a form of table. We use ```create_report_validation``` to convert a validation report from a graph to a table form.
+5. Then, we create a validation report in a form of table. We use ```create_report_validation``` to convert a validation report from a graph to a table form.
     ```python
     # create the completeness validation report
     validation = create_report_validation(data, "entity.value", report_graph, prop_list)
     ```
 
-7. Lastly, we visualize the report to simplify the analysis and understanding process.
+6. Lastly, we visualize the report to simplify the analysis and understanding process.
     ```python
     create_completeness_info_viz(
         validation,
