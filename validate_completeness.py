@@ -2,7 +2,7 @@ import argparse
 import pandas as pd
 
 from pyshacl import validate
-from rdflib import Graph
+from rdflib import Graph, URIRef
 
 
 def validate_graph(shapes_graph, data_graph, is_advanced=False):
@@ -37,6 +37,9 @@ def validate_graph(shapes_graph, data_graph, is_advanced=False):
 def create_report_validation(df, use_col, report_graph, prop_list):
     report = Graph()
     report.parse(data=report_graph)
+
+    # get the required properties
+    # TODO
 
     # list all incompleteness
     list_incomplete = []
@@ -93,15 +96,12 @@ if __name__ == "__main__":
                             help="A file path of data graph in ttl format")
     required.add_argument("--shapes_graph", type=str, required=True,
                             help="A file path of shapes graph in ttl format")
-    required.add_argument("--prop_list", type=str, required=True, nargs="+",
-                            help="A list of property to be check for each entity")
 
     args = parser.parse_args()
     data = pd.read_csv(args.data_file)
     data_prop = pd.read_csv(args.data_prop_file)
     data_graph_file = args.data_graph
     shapes_graph_file = args.shapes_graph
-    prop_list = args.prop_list
 
     # handle NaN values in language attribute
     if 'o.xml:lang' in data_prop.columns.tolist():
@@ -112,6 +112,13 @@ if __name__ == "__main__":
     data_graph = construct_graph(data_graph_file)
     print("Constructing shapes graph ...")
     shapes_graph = construct_graph(shapes_graph_file)
+
+    # get all the required properties
+    prop = set()
+    for s, p, o in shapes_graph:
+        if p == URIRef('http://www.w3.org/ns/shacl#path'):
+            prop.add(o.n3())
+    prop_list = list(prop)
 
     # validate the data graph
     print("Validating the completeness ...")
