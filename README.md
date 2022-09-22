@@ -12,7 +12,7 @@
     <img src="./readme-images/logo.jpg" alt="drawing" width="75%"/>
 </p>
 
-SoCK Library is a library to help user getting information about completeness of knowledge graph data. This library was developed with Python containing functions that can be used in the process of validating the completeness of the knowledge graph data. The functions available in this library are data collection, completeness pattern instantiation, data validation, and data visualization. Users are expected to be familiar with using Python to use this library properly.
+SoCK Library is a library to help user getting information about completeness of knowledge graph data. This library was developed with Python containing functions that can be used in the process of validating the completeness of the knowledge graph data. The functions available in this library are data collection, completeness pattern instantiation, data validation, and data visualization. Users are expected to be familiar with using Python to use this library properly. For now, this library is available only in **Notebook file** (.ipynb) and you can run it on [**Google Colab**](https://colab.research.google.com/) (there are some issues on querying SPARQL on Jupyter Notebook somehow).
 
 The SoCK library reuses some of the existing Python libraries as **requirements**, such as:
 - [RDFLib](https://rdflib.readthedocs.io/)
@@ -27,14 +27,7 @@ SoCK Validator is part of the SoCK Framework project and part of our WOP 2022 pa
 
 # Functions
 
-Here, the user has two options to use this library with **Python file** that run in command line or **Python Notebook file**.
-
-If the user chooses the Python file, there are three files that can be executed.
-- ```prepare_data.py```, generates all the data to be validated.
-- ```generate_shape.py```, generates a shapes graph which contains a set of constraints that data should be conformed.
-- ```validate_completeness.py```, performs a validation process and creates a report in csv file.
-
-On the other side, if the user chooses the Python Notebook file, there are several functions to perform completeness pattern instatiation and completeness validation.
+There are several functions to perform completeness pattern instatiation and completeness validation.
 
 - ```query_sparql```, performs query on a SPARQL endpoint.
 - ```get_data_prop```, gets all the required properties for a validation process.
@@ -55,18 +48,8 @@ All the functions above are generally used consecutively. We prepare a demo to u
     > git clone https://github.com/JillyCS15/sock-validator.git
     ```
 
-2. If you choose Python Notebook file (.ipynb), then just open ```SoCK_Library.ipynb```. If you choose Python file (.py), you have to create a virtual environment at first and install all the module dependencies. Execute these commands below on the command line.
-
-    ```cmd
-    # create a virtual environment
-    > python -m venv -env
-
-    # get into the virtual environment
-    > env\Script\activate
-
-    # install all the module dependencies
-    > pip install -r requirements.txt
-    ```
+2. Go to the Google Colab and sign up with your Google account.
+3. Upload the Notebook file and just run it.
 
 # Demonstration
 
@@ -74,43 +57,9 @@ All the functions above are generally used consecutively. We prepare a demo to u
 
 Given a user wants to check each instance of class ```dbo:Country``` in DBpedia has a label and description property. Then, he finds out the properties he should check out, that are ```rdfs:label``` for a label property and ```rdfs:comment``` for a description property they used.
 
-**Using Python File**
-
-1. First thing first, we have to collect all the data and their corresponding property values. Assume you have created a file containing a query in SPARQL syntax named ```query.txt```. Then, we execute ```prepare_data.py``` along with the required arguments, such as file containing the SPARQL query for data collection, SPARQL endpoint where the SPARQL query executed, URI of entity's class, and a list of required properties. The code we execute should be like this below. After the execution, we get the data in a type of graph called **data graph** stored in the TTL file named ```data_graph.ttl```.
-
-    ```
-    > python prepare_data.py --query_file query.txt --sparql_endpoint http://dbpedia.org/sparql --class_uri http://dbpedia.org/ontology/Country --prop_list rdfs:label rdfs:comment
-    ```
-
-2. Next, we should create a shapes graph containing all the constraints for the data graph. We can check on the SoCK webapp [here](https://sock.cs.ui.ac.id/pattern/) which provide all the type of completeness patterns. Based on the use case, we choose a label and description completeness pattern. Here is the instantiation of its pattern using a manual approach. This instantiation then called as a shapes graph. The shapes graph then stored in the TTL file named ```shapes_graph.ttl```.
-
-    ```
-    # prefixes
-
-    ex:CountryShape
-    a sh:NodeShape;
-    sh:targetClass dbo:Country;
-    sh:property [ a sh:PropertyShape;
-        sh:path rdfs:label;
-        sh:minCount 1 ];
-    sh:property [ a sh:PropertyShape;
-        sh:path rdfs:comment;
-        sh:minCount 1 ].
-    ```
-
-3. The last step, we are ready for the completeness validation. We execute ```validate_completeness.py``` along with the required arguments, such as data & data with the property values (in csv format), data graph, shapes graph, and list of properties to be checked.
-
-    ```
-    > python validate_completeness.py --data_file data.csv --data_prop_file data_prop.csv --data_graph data_graph.ttl --shapes_graph shapes_graph.ttl --prop_list rdfs:label rdfs:comment
-    ```
-
-4. The result is now we have a completeness validation report for each entity in a csv file named ```validation_report.csv```
-
-**Using Python Notebook File**
-
 1. First of all, we have to prepare a Python file to run all the codes. I recommend to use a Python Notebook file.
 
-2. Create an instance of a completeness pattern from [here](https://sock.cs.ui.ac.id/pattern/). Based on the use case, we choose a label and description completeness pattern. Here is the instantiation of its pattern using a manual approach.
+2.  Create an instance of a completeness pattern from [here](https://sock.cs.ui.ac.id/pattern/). Based on the use case, we choose a label and description completeness pattern. Here is the instantiation of its pattern using a manual approach. The shapes should be stored in ```shapes_graph``` variable.
     ```
     # prefixes
 
@@ -125,47 +74,37 @@ Given a user wants to check each instance of class ```dbo:Country``` in DBpedia 
         sh:minCount 1 ].
     ```
 
-3. That instance is used to validate the knowledge graph data. So, now we have to get the data using the code below. Here we limit the result up to 1000 first data.
-    ```python
-    # get all data to be validated
-    query = """
+3. Then, we collect all the data to be validated along with the required properties. At first you have to set up the query. According to the use case, we have to collect the entities from ```dbo:Country```. The query should be like this.
+
+    ```
     SELECT DISTINCT ?entity
     WHERE {
         ?entity a dbo:Country .
     }
-    LIMIT 1000
-    """
+    LIMIT 100
+    ```
 
-    data = query_sparql(query, "http://dbpedia.org/sparql")
+    Don't forget to add the SPARQL endpoint and all the properties to be check (```rdfs:label``` and ```rdfs:comment```).
 
-
-    # get all the property values
-    data['entity'] = data['entity.value'].apply(lambda x: f"<{x}>")
-
-    dbpedia_endpoint = "http://dbpedia.org/sparql"
+    ```python
+    endpoint = "http://dbpedia.org/sparql"
     prop_list = ['rdfs:label', 'rdfs:comment']
 
-    data_prop = get_data_prop(data, prop_list, 50, dbpedia_endpoint)
+    data = query_sparql(query, endpoint)
+    data_prop = get_data_prop(data, prop_list, endpoint)
     ```
 
-4. After we get all the data, we have to build a data graph and a shapes graph. Let's say that the pattern instance we use is saved on ```./LDC-Country.ttl```.
-    ```python
-    # build data graph
-    data_graph = build_data_graph(data, data_prop)
+    After all the data is clear, we have to build data graph. You can check it on the cell code and the graph should be stored in ```data_graph``` variable.
 
-    # build shapes graph from the instantiation
-    shapes_graph = build_shapes_graph("./LDC-Country.ttl")
-    ```
-
-5. Having the data graph and shapes graph, We are ready to run a validation process as a code written below.
+4. Having the data graph and shapes graph, We are ready to run a validation process. We put the ```data_graph``` and ```shapes_graph``` as the input of the function ```validate_graph()```. The result is the report which the entities are not conform. we can adjust the use of SHACL advanced feature in the validation process by assigning a value (Boolean) to the variable ```use_advance_feat```.
     ```python
-    conforms, report_graph, report_text = validate_graph(shapes_graph, data_graph)
+    # validate the data graph
+    conforms, report_graph, report_text = validate_graph(shapes_graph, data_graph, use_advance_feat)
     ```
 
 6. Then, we create a validation report in a form of table. We use ```create_report_validation``` to convert a validation report from a graph to a table form.
     ```python
-    prop_list = ['rdfs:label', 'rdfs:comment']
-
+    # create the completeness validation report
     validation = create_report_validation(data, "entity.value", report_graph, prop_list)
     ```
 
