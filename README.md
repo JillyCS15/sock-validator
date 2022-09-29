@@ -12,7 +12,7 @@
     <img src="./readme-images/logo.jpg" alt="drawing" width="75%"/>
 </p>
 
-SoCK Library is a library to help user getting information about completeness of knowledge graph data. This library was developed with Python containing functions that can be used in the process of validating the completeness of the knowledge graph data. The functions available in this library are data collection, completeness pattern instantiation, data validation, and data visualization. Users are expected to be familiar with using Python to use this library properly. For now, this library is available only in **Notebook file** (.ipynb) and you can run it on [**Google Colab**](https://colab.research.google.com/) (there are some issues on querying SPARQL on Jupyter Notebook somehow).
+SoCK Library is a library to help user getting information about completeness of knowledge graph data. This library was developed with Python containing functions that can be used in the process of validating the completeness of the knowledge graph data. The functions available in this library are data collection, completeness pattern instantiation, data validation, and data visualization. Users are expected to be familiar with using Python to use this library properly. The library file can be run on local environment using Jupyter Notebook or Visual Studio Code and online environment like Google Colab. A command line executable file is set to be a wishlist.
 
 The SoCK library reuses some of the existing Python libraries as **requirements**, such as:
 - [RDFLib](https://rdflib.readthedocs.io/)
@@ -48,8 +48,9 @@ All the functions above are generally used consecutively. We prepare a demo to u
     > git clone https://github.com/JillyCS15/sock-validator.git
     ```
 
-2. Go to the Google Colab and sign up with your Google account.
-3. Upload the Notebook file and just run it.
+2. Open the ```SoCK-Library.ipynb``` file.
+    - If you would run it locally, you may change the file location so it fits the environment
+    - If you would run it on Google Colab, prepare a Google account and upload the file on it.
 
 # Demonstration
 
@@ -113,15 +114,17 @@ Given a user wants to check each instance of class ```dbo:Country``` in DBpedia 
     create_completeness_info_viz(
         validation,
         prop_list,
-        'Label and Description Completeness Validation of ...')
+        'Label and Description Completeness Information of Class Country in DBpedia')
     ```
     <p align="center">
         <img src="./readme-images/ldc-country.png" alt="drawing" width="75%"/>
     </p>
 
+We recommend you the see the other example use cases [here](https://drive.google.com/drive/u/2/folders/1hsNBRg2dKD1Uw5EXpH0ZRxDK1feyZc4R).
+
 # Contributors
 
 Thanks for all these great people from the **Faculty of Computer Science, Universitas Indonesia**, to contribute in this project:
-- [Muhammad Jilham Luthfi](mailto:jilham.luthfi15@gmail.com)
-- [Fariz Darari](mailto:fariz@ui.ac.id)
+- [Muhammad Jilham Luthfi, S.Kom.](mailto:jilham.luthfi15@gmail.com)
+- [Dr. Fariz Darari](mailto:fariz@ui.ac.id)
 - [Amanda Carrisa Ashardian](mailto:amanda.carrisa@ui.ac.id)
