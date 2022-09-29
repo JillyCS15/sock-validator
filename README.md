@@ -120,7 +120,7 @@ Given a user wants to check each instance of class ```dbo:Country``` in DBpedia 
         <img src="./readme-images/ldc-country.png" alt="drawing" width="75%"/>
     </p>
 
-We recommend you the see the other example use cases [here](https://drive.google.com/drive/u/2/folders/1hsNBRg2dKD1Uw5EXpH0ZRxDK1feyZc4R).
+We recommend you to see the other example use cases [here](https://drive.google.com/drive/u/2/folders/1hsNBRg2dKD1Uw5EXpH0ZRxDK1feyZc4R).
 
 # Contributors
 
