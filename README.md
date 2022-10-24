@@ -58,7 +58,7 @@ All the functions above are generally used consecutively. We prepare a demo to u
 
 Given a user wants to check each instance of class ```dbo:Country``` in DBpedia has a label and description property. Then, he finds out the properties he should check out, that are ```rdfs:label``` for a label property and ```rdfs:comment``` for a description property they used.
 
-1. First of all, we have to prepare a Python file to run all the codes. I recommend to use a Python Notebook file.
+1. First of all, we have to download the Python notebook file in the repository.
 
 2.  Create an instance of a completeness pattern from [here](https://sock.cs.ui.ac.id/pattern/). Based on the use case, we choose a label and description completeness pattern. Here is the instantiation of its pattern using a manual approach. The shapes should be stored in ```shapes_graph``` variable.
     ```
